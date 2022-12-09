@@ -3,6 +3,9 @@
     description: 
     Test the trending.py module
     author: bksteele, bksvcs@rit.edu
+
+    TEST 2 TAKES FOREVER TO RUN, BUT TO SAVE U SOME TIME,
+    IT RETURNS FALSE :(
 """
 
 import index_tools
@@ -42,7 +45,7 @@ def test1():
         # compute growth rates only for annual averages of HPI values.
         trends = trending.calculate_trends( annual, year[0], year[1] )
 
-        results = [ trends[0], trends[9], trends[-1] ]    # sampling
+        results = [trends[0], trends[9], trends[-1]]    # sampling
 
         key = fname + " " + str(year[0]) + " " + str(year[1])
 
@@ -65,8 +68,6 @@ def test2():
       [('02650', 60.7489425230157), ('46186', 26.705136694730868), ('13204', -35.465021912027275)]
     answer[ "HPI_AT_ZIP5.txt 2006 2008" ] = \
       [('52037', 20.656522375739293), ('47231', 16.33947277520282), ('93635', -35.20316697877354)]
-
-
 
     for year in [ (1994,2002), (1995,1996), (2006,2008) ]:
 

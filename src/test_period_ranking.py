@@ -16,7 +16,6 @@ def test1():
     """
     tests period_ranking.quarter_data() and period_ranking.annual_data().
     """
-
     print( 'testing state data processing...')
     fname = "HPI_PO_state.txt"
     data = index_tools.read_state_house_price_data("data/" + fname )
@@ -62,7 +61,6 @@ def test2():
     for year in [ 1996, 2003, 2006, 2014]:
         results = period_ranking.annual_data( data, year)
         key = fname + " " + str(year)
-        #print( key )
         if key in answer:
             print( fname, str( year), ":", ( results[1:11:9] == answer[ key] ))
         else:

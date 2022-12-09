@@ -1,11 +1,10 @@
 from dataclasses import dataclass
-
+import math
 @dataclass
 class QuarterHPI:
     year: int
     qtr: int
     index: float
-
 @dataclass
 class AnnualHPI:
     year: int
@@ -65,9 +64,18 @@ def read_zip_house_price_data(filepath):
                     else:
                         d[line[0]] = [AnnualHPI(int(line[1]), float(line[3]))]
                         counter+=1
+
         if missing_counter != "0":
-            print("count: "+str(counter) +" uncounted:"+str(missing_counter))
+            print("counter: "+str(counter) +" uncounted:"+str(missing_counter))
     return d
+
+"""
+def test():
+    data = read_zip_house_price_data("data/HPI_AT_ZIP5.txt")
+    print(data["14706"][-3:])
+
+test()
+"""
 
 def index_range(data,region):
     """
@@ -92,18 +100,31 @@ def index_range(data,region):
     return (min, max)
 
 def print_range(data, region):
+    """
+    calls index_range and sets wtv it returns to Min_Max
+    if Min_Max has an attribute qtr, runs the first
+    if Min_Max doesn't have an attribute, runs the second
+
+    either returns a "Low: year/quarter/index:" style or a "Low: year/index:" style
+    """
     Min_Max = index_range(data, region)
-    print("Region: "+region)
-    print("Low: year/quarter/index:",Min_Max[0].year,"/",Min_Max[0].qtr,"/",Min_Max[0].index)
-    print("High: year/quarter/index:",Min_Max[1].year,"/",Min_Max[1].qtr,"/",Min_Max[1].index)
+    if hasattr(Min_Max[0], "qtr") == True:
+        print("Region: "+region)
+        print("Low: year/quarter/index:",Min_Max[0].year,"/", Min_Max[0].qtr,"/",Min_Max[0].index)
+        print("High: year/quarter/index:",Min_Max[1].year,"/", Min_Max[1].qtr,"/",Min_Max[1].index)
+    else:
+        print("Region: " + region)
+        print("Low: year/index:", Min_Max[0].year, "/", Min_Max[0].index)
+        print("High: year/index:", Min_Max[1].year, "/", Min_Max[1].index)
+
 
 def Sort_Tuple(tup):
     """
     sorts the list of tuples by second item
     returns [('UT', 182.3), ('CO', 166.24),
     ('OR', 165.86), ('MT', 163.95), ('WY', 152.27),
-     ('NE', 147.24), ('SD', 145.55), ('MI', 145.16),
-      ('WI', 143.14), ('ID', 142.68), ('LA', 142.64), .......]
+    ('NE', 147.24), ('SD', 145.55), ('MI', 145.16),
+    ('WI', 143.14), ('ID', 142.68), ('LA', 142.64), .......]
     """
     lst = len(tup)
     for i in range(0, lst):
@@ -116,22 +137,25 @@ def Sort_Tuple(tup):
 
 def print_ranking (data, heading="Ranking"):
     """
-    data: a list of ("state", index_nsa)
+    data: a list of (state, index)
     [('AK', 100.0), ('AK', 102.24), ('AK', 104.92),
     ('AK', 110.87), ('AK', 114.63), ('AK', 120.6),
     ('AK', 123.15), ('AK', 125.52), ('AK', 129.25),
     ('AK', 129.97), ('AK', 130.68), ...............]
-    """
-    # print("original data")
-    # print(data)
-    # print()
-    #
-    # print("sorted data:")
-    sorted_data = Sort_Tuple(data)
-    # print(sorted_data)
-    # print()
 
-    print(heading)
+    prints the top 10 and the last 10  in descending order:
+
+    The Top 10:
+    1 : ('DC', 9.566119771213287)
+    2 : ('HI', 8.063339684485872)
+    3 : ('MD', 6.92564386775647)
+    [..]
+    The Bottom 10:
+    42 : ('KS', 3.0272958147068874)
+    43 : ('IA', 3.021685420175868)
+    44 : ('KY', 3.008156959106967)
+    """
+    sorted_data = Sort_Tuple(data)
     print("The Top 10: ")
     for i in range(0, 10):
         print(str(i+1) + " : " + str(sorted_data[i]))
@@ -141,16 +165,16 @@ def print_ranking (data, heading="Ranking"):
 
 def sum_index(list_qtr):
     """
-    pre-condition: there is only 4 qtrs per year
-    returns the avg of index all 4 indexes in each year
+    returns the avg of index all indexes in each year
     """
-    if (len(list_qtr)!=4):
-        raise IndexError("there is not enough data")
-    return (list_qtr[0].index+list_qtr[1].index+list_qtr[2].index+list_qtr[3].index)/4
+    sum = 0
+    for qtr in list_qtr:
+        sum += qtr.index
+    return sum/len(list_qtr)
 
 def annualize(data):
     """
-    returns the annual avg index for first wtv annual[][x] years, x = # ofy ears
+    returns the annual avg index for first wtv annual[][x] years, x = # of years
     uses this format: list[int:int:int] to loop through the list of items
 
     returns a dictionary mapping regions to lists of AnnualHPI objects. Note: This function
@@ -161,55 +185,54 @@ def annualize(data):
 
     data: {region[]: QuarterHPI[]}
     returns:
-        {region[]: AnnualHPI[]}
+        [region[]: AnnualHPI[]]
+
+    annual[’NY’][:3] returns:
+        [AnnualHPI( year=1991, index=99.9675 ), AnnualHPI( year=1992, index=101.355
+        ), AnnualHPI( year=1993, index=100.875 )]
     """
-    fin = {}
+    dict = {}
     for k, v in data.items():
-        # list = [4*i for i in list]
-        # range(int(len(v)/4))
-        # AnnualHPI(v[4*i].year, sum_index(v[4*i:4*(i+1)]))
-        fin[k] = [AnnualHPI(v[4*i].year, sum_index(v[4*i:4*(i+1)])) for i in range(int(len(v)/4))]
-    return fin
+        # k is the state
+        # v is list associated w/ the state
+        dict[k] = [AnnualHPI(v[4*i].year, sum_index(v[4*i:4*(i+1)])) for i in range(math.ceil(len(v)/4))]
+    return dict
 
 if __name__ == "__main__":
-    print("hi")
-    # file = input("Enter house price index file: ")
-    # if file == "HPI_AT_state.txt":
-    #     data = read_state_house_price_data("data/HPI_AT_state.txt")
-    # elif file == "HPI_PO_state.txt":
-    #     data = read_zip_house_price_data("data/HPI_PO_state.txt")
-    # else:
-    #     raise FileNotFoundError(">:(")
-    # region = input("Enter region of interest (Hit enter to stop): ")
-    # if region is not None:
-    #
-    # else:
-    #     break
-    #     data = read_state_house_price_data("../data/HPI_AT_state.txt")
-    # else:
-    #     data = read_zip_house_price_data("../data/HPI_PO_state.txt")
-    # while region != "":
-    #     print("====================================================")
-    #     print("Region: " + str(region))
-    #     print(print_range(data, region))
-    # file = "./HPI_AT_state.txt"
-    # print(data["14610"][:3])
-    # print("")
-    # print(data["14706"][-3:])
-    # data = read_state_house_price_data("../data/HPI_PO_state.txt")
-    # annual = annualize(data)
-    # year = 1998
-    # qtr = 1
-    # print_ranking(period_ranking.quarter_data(data, year, qtr), str(year) + "/Q" + str(qtr) + " Quarterly Ranking" )
+    """
+    prompts user to enter a file name, if it's a state file, file is read as a state data
+    if it is a zip file, file is read as a zip house file
+    if user enters anything else, prompts a file not found error
+    
+    creates an empty list to store the regions to check
+    loops through each region to calculate the print range and annualized 
+    returns print range, and annualized data by year
+    """
+    file = input("Enter house price index file: ")
+    if "state" in file:
+        data = read_state_house_price_data("data/"+file)
+    elif "ZIP" in file:
+        data = read_zip_house_price_data("data/"+file)
+    else:
+        raise FileNotFoundError("File is not found")
 
-    # HPI_PO_state.txt
-    # print(index_range(data, "NY"))
-    # print("")
-    # data = read_state_house_price_data("../data/HPI_PO_state.txt")
-    # print(data)
-    # print(annualize_helper(data))
-    # annual = annualize(data)
-    # print()
-    # print(annual["NY"][:3])
+    lst = []
+    while True:
+        region = input("Next region of interest(Hit ENTER to stop): ")
+        lst.append(region)
+        if region == "":
+            break
 
+    for i in range((len(lst)-1)):
+        print("="*75)
+        annualized_high_low = annualize(data)
+        if "state" in file:
+            print_range(data, lst[i])
+        print_range(annualized_high_low, lst[i])
+
+        print("\nAnnualized Index Values for "+ lst[i])
+        # print(annualized_high_low[lst[i]])
+        for j in annualized_high_low[lst[i]]:
+            print(j)
+# """
 
