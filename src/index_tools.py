@@ -235,4 +235,4 @@ if __name__ == "__main__":
         # print(annualized_high_low[lst[i]])
         for j in annualized_high_low[lst[i]]:
             print(j)
-# """
+

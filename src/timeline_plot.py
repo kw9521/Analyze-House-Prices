@@ -7,10 +7,6 @@ import copy
 import index_tools
 import trending
 
-"""
-DID NOT HAVE TIME TO FULLY FINISH THIS MODULE :((((((((((((((((( 
-but the 1 function I wrote works sooooooooooooooo partial credit? 🥺🥺🥺🥺
-"""
 
 def build_plottable_array(xyears, regiondata):
     pass
