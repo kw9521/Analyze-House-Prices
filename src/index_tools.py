@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 import math
+
 @dataclass
 class QuarterHPI:
     year: int
@@ -235,4 +236,3 @@ if __name__ == "__main__":
         for j in annualized_high_low[lst[i]]:
             print(j)
 # """
-
